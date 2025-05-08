@@ -1,0 +1,94 @@
+use std::{fmt::Debug, i64::MAX, path::Display};
+
+use byte_slice::{Bytes, slice_to_unsigned};
+use crate::packet::network::NetworkLayer;
+use anyhow::Result;
+
+
+#[derive(Debug, Default)]
+pub enum DataLinkLayer {
+    #[default]
+    UNDEFINED,
+
+    ETHII(ETHII),
+    PPP,
+    HDLC,
+}
+
+
+
+
+
+
+#[derive(Default)]
+pub struct Tag802_1Q(u16); // PCP 3 bits // DEI 1 bit // VID 12 bits
+
+impl Debug for Tag802_1Q {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Tag802_1Q")
+            .field("PCP", &(self.0 >> 13))
+            .field("DEI", &((self.0 >> 12) & 1))
+            .field("VID", &(self.0 & 0x0fff))
+            .finish()
+    }
+}
+
+
+#[derive(Debug, Default)]
+pub struct MacHeader {
+    pub address_dst: u64,
+    pub address_src: u64,
+    pub tag_802_1q:  Option<Tag802_1Q>,
+    pub ethertype:   u16,
+}
+
+impl MacHeader {
+    pub fn from_bytes(bytes: &mut Bytes) -> Result<Self> {
+        let address_dst = slice_to_unsigned!(bytes[0..6], u64);
+        let address_src = slice_to_unsigned!(bytes[6..12], u64);
+        let tag_802_1q = bytes[12..14]
+            .eq(&[0x81, 0x00])
+            .then(|| { Tag802_1Q(slice_to_unsigned!(bytes[14..16], u16)) });
+        let offset = if tag_802_1q.is_some() { 4 } else { 0 };
+        let ethertype = slice_to_unsigned!(bytes[12+offset..14+offset], u16);
+
+        bytes.shift_first(14+offset)?;
+
+        Ok(
+            Self {
+                address_dst,
+                address_src,
+                tag_802_1q,
+                ethertype,
+                ..Default::default()
+            }
+        )
+    }
+}
+
+
+
+
+
+
+
+#[derive(Debug, Default)]
+pub struct ETHII {
+    pub mac_header: MacHeader,
+    pub network_layer: NetworkLayer,
+}
+
+impl ETHII {
+    // TODO this does not need to be pub if DataLinkLayer has a from_bytes function
+    pub fn from_bytes(bytes: &mut Bytes) -> Result<Self> {
+        let mac_header = MacHeader::from_bytes(bytes)?;
+        let network_layer = NetworkLayer::from_data(mac_header.ethertype, bytes);
+
+        Ok(
+            Self {
+                mac_header,
+                network_layer
+            }
+        )
+    }
+}
