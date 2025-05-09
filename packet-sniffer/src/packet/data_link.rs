@@ -1,16 +1,17 @@
-use std::{fmt::Debug, i64::MAX, path::Display};
+use std::fmt::Debug;
 
-use byte_slice::{Bytes, slice_to_unsigned};
+use byte_slice::{Bytes, SliceToUnsigned};
 use crate::packet::network::NetworkLayer;
 use anyhow::Result;
 
 
 #[derive(Debug, Default)]
-pub enum DataLinkLayer {
+pub enum DataLinkLayer<'a> {
     #[default]
-    UNDEFINED,
+    NULL,
 
-    ETHII(ETHII),
+    UndefinedData(&'a Bytes<'a>),
+    ETHII(ETHII<'a>),
     PPP,
     HDLC,
 }
@@ -44,13 +45,13 @@ pub struct MacHeader {
 
 impl MacHeader {
     pub fn from_bytes(bytes: &mut Bytes) -> Result<Self> {
-        let address_dst = slice_to_unsigned!(bytes[0..6], u64);
-        let address_src = slice_to_unsigned!(bytes[6..12], u64);
+        let address_dst = bytes[0..6].to_u64();
+        let address_src = bytes[6..12].to_u64();
         let tag_802_1q = bytes[12..14]
             .eq(&[0x81, 0x00])
-            .then(|| { Tag802_1Q(slice_to_unsigned!(bytes[14..16], u16)) });
+            .then(|| { Tag802_1Q(bytes[14..16].to_u16()) });
         let offset = if tag_802_1q.is_some() { 4 } else { 0 };
-        let ethertype = slice_to_unsigned!(bytes[12+offset..14+offset], u16);
+        let ethertype = bytes[12+offset..14+offset].to_u16();
 
         bytes.shift_first(14+offset)?;
 
@@ -73,16 +74,16 @@ impl MacHeader {
 
 
 #[derive(Debug, Default)]
-pub struct ETHII {
+pub struct ETHII<'a> {
     pub mac_header: MacHeader,
-    pub network_layer: NetworkLayer,
+    pub network_layer: NetworkLayer<'a>,
 }
 
-impl ETHII {
+impl<'a> ETHII<'a> {
     // TODO this does not need to be pub if DataLinkLayer has a from_bytes function
-    pub fn from_bytes(bytes: &mut Bytes) -> Result<Self> {
+    pub fn from_bytes(bytes: &'a mut Bytes) -> Result<Self> {
         let mac_header = MacHeader::from_bytes(bytes)?;
-        let network_layer = NetworkLayer::from_data(mac_header.ethertype, bytes);
+        let network_layer = NetworkLayer::from_data(mac_header.ethertype, bytes)?;
 
         Ok(
             Self {

@@ -1,13 +1,8 @@
 use anyhow::{Result, anyhow};
-use std::ops::{Index, Range, RangeFrom, RangeTo, RangeFull, RangeInclusive};
+use std::{fmt::Debug, ops::{Index, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo}};
 
 
-#[derive(Debug)]
-pub struct Bytes<'a> {
-    idx_first: usize, 
-    idx_last: usize, 
-    data: &'a [u8]
-}
+
 
 
 pub trait Hex {
@@ -32,6 +27,14 @@ impl Hex for &str {
 }
 
 
+
+
+#[derive(Default)]
+pub struct Bytes<'a> {
+    idx_first: usize, 
+    idx_last: usize, 
+    data: &'a [u8]
+}
 
 impl<'a> Bytes<'a>{
     pub fn from_slice(slice: &'a[u8]) -> Self {
@@ -87,7 +90,7 @@ impl<'a> Index<Range<usize>> for Bytes<'a> {
     fn index(&self, index: Range<usize>) -> &Self::Output {
         &self.data[
             self.idx_first+index.start..
-            index.end
+            self.idx_first+index.end
         ]
     }
 }
@@ -109,7 +112,7 @@ impl<'a> Index<RangeTo<usize>> for Bytes<'a> {
     fn index(&self, index: RangeTo<usize>) -> &Self::Output {
         &self.data[
             self.idx_first..
-            index.end
+            self.idx_first+index.end
         ]
     }
 }
@@ -131,8 +134,28 @@ impl<'a> Index<RangeInclusive<usize>> for Bytes<'a> {
     fn index(&self, index: RangeInclusive<usize>) -> &Self::Output {
         &self.data[
             self.idx_first+index.start()..=
-            *index.end()
+            self.idx_first + *index.end()
         ]
+    }
+}
+
+
+const DEFAULT_BYTES_SLICE: [u8; 0] = [];
+
+impl Default for &Bytes<'_> {
+    fn default() -> Self {
+        &Bytes {
+            idx_first: 0,
+            idx_last: 0,
+            data: &DEFAULT_BYTES_SLICE
+        }
+    }
+}
+
+impl<'a> Debug for Bytes<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Bytes")
+            .field("data", &&self[..]).finish()
     }
 }
 
@@ -142,8 +165,6 @@ impl<'a> Index<RangeInclusive<usize>> for Bytes<'a> {
 macro_rules! slice_to_unsigned {
     ($slice:expr, $unsigned:ty) => {
         {
-            // let _assert: u8 = $slice[0];
-
             let mut count: $unsigned = 0;
             for byte in $slice.iter() {
                 count <<= 8;
@@ -153,4 +174,87 @@ macro_rules! slice_to_unsigned {
             count
         }
     };
+}
+
+
+#[derive(Default)]
+pub struct Ipv4addr(pub u32);
+
+impl Debug for Ipv4addr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let fir = (self.0 & 0xff000000) >> 24;
+        let sec = (self.0 & 0x00ff0000) >> 16;
+        let thr = (self.0 & 0x0000ff00) >> 8;
+        let fou =  self.0 & 0x000000ff;
+
+        f.debug_tuple("Ipv4addr")
+            .field(&format!("{fir}:{sec}:{thr}:{fou}"))
+            .finish()
+    }
+}
+
+
+pub trait SliceToUnsigned {
+    fn to_u8(&self) -> u8;
+    fn to_u16(&self) -> u16;
+    fn to_u32(&self) -> u32;
+    fn to_u64(&self) -> u64;
+    fn to_u128(&self) -> u128;
+}
+
+impl SliceToUnsigned for [u8] {
+    fn to_u8(&self) -> u8 {
+        assert!(self.len() <= 1, "[u8]::SliceToUnsigned::to_u8() self.len must be <= 1");
+
+        self[0]
+    }
+
+    fn to_u16(&self) -> u16 {
+        assert!(self.len() <= 2, "[u8]::SliceToUnsigned::to_u16() self.len must be <= 2");
+
+        let mut res = 0;
+        for byte in self {
+            res <<= 8;
+            res |= *byte as u16;
+        }
+
+        res
+    }
+
+    fn to_u32(&self) -> u32 {
+        assert!(self.len() <= 4, "[u8]::SliceToUnsigned::to_u32() self.len must be <= 4");
+
+
+        let mut res = 0;
+        for byte in self {
+            res <<= 8;
+            res |= *byte as u32;
+        }
+
+        res
+    }
+
+    fn to_u64(&self) -> u64 {
+        assert!(self.len() <= 8, "[u8]::SliceToUnsigned::to_u64() self.len must be <= 8");
+
+        let mut res = 0;
+        for byte in self {
+            res <<= 8;
+            res |= *byte as u64;
+        }
+
+        res
+    }
+
+    fn to_u128(&self) -> u128 {
+        assert!(self.len() <= 16, "[u8]::SliceToUnsigned::to_u128() self.len must be <= 16");
+
+        let mut res = 0;
+        for byte in self {
+            res <<= 8;
+            res |= *byte as u128;
+        }
+
+        res
+    }
 }
