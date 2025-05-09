@@ -33,7 +33,7 @@ pub struct TCP<'a> {
     pub port_dst: u16,
     pub sequence_num: u32,
     pub acknowledgement_num: u32,
-    pub data_offset: u8, // 4 bit // number of 32 bit words in the header //  DO / 4 = header_len (in bytes)
+    pub data_offset: u8, // 4 bit // number of 32 bit words in the header //  data_offset / 4 = header_len (in bytes)
     pub reserved: u8, // 3 bit // ALWAYS 0
     pub control_bits: u8, // 6 bits
     pub window: u16,

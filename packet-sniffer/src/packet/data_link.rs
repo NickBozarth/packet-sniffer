@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use byte_slice::{Bytes, SliceToUnsigned};
+use byte_slice::{Bytes, MacAddress, SliceToUnsigned};
 use crate::packet::network::NetworkLayer;
 use anyhow::Result;
 
@@ -37,16 +37,16 @@ impl Debug for Tag802_1Q {
 
 #[derive(Debug, Default)]
 pub struct MacHeader {
-    pub address_dst: u64,
-    pub address_src: u64,
+    pub address_dst: MacAddress,
+    pub address_src: MacAddress,
     pub tag_802_1q:  Option<Tag802_1Q>,
     pub ethertype:   u16,
 }
 
 impl MacHeader {
     pub fn from_bytes(bytes: &mut Bytes) -> Result<Self> {
-        let address_dst = bytes[0..6].to_u64();
-        let address_src = bytes[6..12].to_u64();
+        let address_dst = MacAddress::from(bytes[0..6].to_u64());
+        let address_src = MacAddress::from(bytes[6..12].to_u64());
         let tag_802_1q = bytes[12..14]
             .eq(&[0x81, 0x00])
             .then(|| { Tag802_1Q(bytes[14..16].to_u16()) });

@@ -1,4 +1,4 @@
-use byte_slice::{Bytes, Ipv4addr, SliceToUnsigned};
+use byte_slice::{Bytes, Ipv4addr, MacAddress, SliceToUnsigned};
 use crate::packet::transport::*;
 use anyhow::Result;
 
@@ -11,7 +11,7 @@ pub enum NetworkLayer<'a> {
     Ipv4(Ipv4<'a>),
     Ipv6,
     ICMP,
-    ARP,
+    ARP(ARP),
     RARP,
     NAT,
     RIP,
@@ -26,11 +26,15 @@ impl<'a> NetworkLayer<'a> {
         Ok(
             match layer_type {
                 0x0800 => NetworkLayer::Ipv4(Ipv4::from_bytes(bytes)?),
+                0x0806 => NetworkLayer::ARP(ARP::from_bytes(bytes)?),
                 _ => NetworkLayer::UndefinedData(bytes)
             }
         )
     }
 }
+
+
+
 
 
 
@@ -92,6 +96,52 @@ impl<'a> Ipv4<'a> {
                 address_src,
                 address_dst,
                 transport_layer,
+            }
+        )
+    }
+}
+
+
+
+
+
+#[derive(Debug, Default)]
+pub struct ARP {
+    pub hardware_type: u16,
+    pub protocol_type: u16,
+    pub hardware_len: u8,
+    pub protocol_len: u8,
+    pub operation: u16,
+    pub sender_hardware_address: MacAddress, // 48 bits
+    pub sender_protocol_address: Ipv4addr,
+    pub target_hardware_address: MacAddress, // 48 bits
+    pub target_protocol_address: Ipv4addr,
+}
+
+impl ARP {
+    fn from_bytes(bytes: &Bytes) -> Result<Self> {
+
+        let hardware_type = bytes[0..2].to_u16();
+        let protocol_type = bytes[2..4].to_u16();
+        let hardware_len = bytes[4];
+        let protocol_len = bytes[5];
+        let operation = bytes[6..8].to_u16();
+        let sender_hardware_address = MacAddress::from(bytes[8..14].to_u64());
+        let sender_protocol_address = Ipv4addr(bytes[14..18].to_u32());
+        let target_hardware_address = MacAddress::from(bytes[18..24].to_u64());
+        let target_protocol_address = Ipv4addr(bytes[24..28].to_u32());
+
+        Ok(
+            Self {
+                hardware_type,
+                protocol_type,
+                hardware_len,
+                protocol_len,
+                operation,
+                sender_hardware_address,
+                sender_protocol_address,
+                target_hardware_address,
+                target_protocol_address
             }
         )
     }

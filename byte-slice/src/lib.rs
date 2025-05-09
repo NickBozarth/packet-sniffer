@@ -1,5 +1,5 @@
 use anyhow::{Result, anyhow};
-use std::{fmt::Debug, ops::{Index, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo}};
+use std::{fmt::{Debug, Write}, ops::{Index, Range, RangeFrom, RangeFull, RangeInclusive, RangeTo}};
 
 
 
@@ -154,8 +154,9 @@ impl Default for &Bytes<'_> {
 
 impl<'a> Debug for Bytes<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Bytes")
-            .field("data", &&self[..]).finish()
+        f.debug_tuple("Bytes")
+            .field(&&self[..])
+            .finish()
     }
 }
 
@@ -182,16 +183,41 @@ pub struct Ipv4addr(pub u32);
 
 impl Debug for Ipv4addr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let fir = (self.0 & 0xff000000) >> 24;
-        let sec = (self.0 & 0x00ff0000) >> 16;
-        let thr = (self.0 & 0x0000ff00) >> 8;
-        let fou =  self.0 & 0x000000ff;
+        let f1 = (self.0 & 0xff000000) >> 24;
+        let f2 = (self.0 & 0x00ff0000) >> 16;
+        let f3 = (self.0 & 0x0000ff00) >> 8;
+        let f4 =  self.0 & 0x000000ff;
 
-        f.debug_tuple("Ipv4addr")
-            .field(&format!("{fir}:{sec}:{thr}:{fou}"))
-            .finish()
+        f.write_fmt(format_args!("{f1}.{f2}.{f3}.{f4} Ipv4"))
     }
 }
+
+
+#[derive(Default)]
+pub struct MacAddress(u16, u32); // 48 bit address so a u16 and u32 will pack the values together
+
+impl From<u64> for MacAddress {
+    fn from(value: u64) -> Self {
+        Self(
+            ((value >> 32) & 0xffff) as u16,
+            (value & 0xffff_ffff) as u32
+        )
+    }
+}
+
+impl Debug for MacAddress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let f1 = self.0 >> 8;
+        let f2 = self.0 & 0x00ff;
+        let f3 = self.1 >> 24;
+        let f4 = (self.1 >> 16) & 0xff;
+        let f5 = (self.1 >> 8) & 0xff;
+        let f6 = self.1 & 0xff;
+
+        f.write_fmt(format_args!("{f1:x}:{f2:x}:{f3:x}:{f4:x}:{f5:x}:{f6:x} Mac"))
+    }
+}
+
 
 
 pub trait SliceToUnsigned {
