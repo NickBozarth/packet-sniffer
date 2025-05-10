@@ -1,4 +1,4 @@
-use byte_slice::{Bytes, Ipv4addr, MacAddress, SliceToUnsigned};
+use byte_slice::{Bytes, Ipv4addr, Ipv6addr, MacAddress, SliceToUnsigned};
 use crate::packet::transport::*;
 use anyhow::Result;
 
@@ -9,8 +9,7 @@ pub enum NetworkLayer<'a> {
 
     UndefinedData(&'a Bytes<'a>),
     Ipv4(Ipv4<'a>),
-    Ipv6,
-    ICMP,
+    Ipv6(Ipv6<'a>),
     ARP(ARP),
     RARP,
     NAT,
@@ -27,6 +26,7 @@ impl<'a> NetworkLayer<'a> {
             match layer_type {
                 0x0800 => NetworkLayer::Ipv4(Ipv4::from_bytes(bytes)?),
                 0x0806 => NetworkLayer::ARP(ARP::from_bytes(bytes)?),
+                0x86dd => NetworkLayer::Ipv6(Ipv6::from_bytes(bytes)?),
                 _ => NetworkLayer::UndefinedData(bytes)
             }
         )
@@ -100,6 +100,62 @@ impl<'a> Ipv4<'a> {
         )
     }
 }
+
+
+
+
+
+#[derive(Debug, Default)]
+pub struct Ipv6<'a> {
+    pub version: u8, // 4 bits
+    pub traffic_class: u8,
+    pub flow_label: u32, // 20 bits
+    pub payload_length: u16,
+    pub next_header: u8,
+    pub hop_limit: u8,
+    pub address_src: Ipv6addr,
+    pub address_dst: Ipv6addr,
+
+    pub transport_layer: TransportLayer<'a>
+}
+
+impl<'a> Ipv6<'a> {
+    fn from_bytes(bytes: &'a mut Bytes) -> Result<Self> {
+
+        let version = bytes[0] >> 4;
+        let traffic_class = (bytes[0..2].to_u16() >> 4) as u8;
+        let flow_label = bytes[1..4].to_u32() & 0x0fffff;
+        let payload_length = bytes[4..6].to_u16();
+        let next_header = bytes[6];
+        let hop_limit = bytes[7];
+        let address_src = Ipv6addr(bytes[8..24].to_u128());
+        let address_dst = Ipv6addr(bytes[24..40].to_u128());
+
+        bytes.shift_first(40)?;
+
+
+
+
+        let transport_layer = TransportLayer::from_data(next_header, bytes)?;
+
+        Ok(
+            Self {
+                version,
+                traffic_class,
+                flow_label,
+                payload_length,
+                next_header,
+                hop_limit,
+                address_src,
+                address_dst,
+                transport_layer,
+
+                ..Default::default()
+            }
+        )
+    }
+}
+
 
 
 

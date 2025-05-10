@@ -33,7 +33,9 @@ impl Hex for &str {
 pub struct Bytes<'a> {
     idx_first: usize, 
     idx_last: usize, 
-    data: &'a [u8]
+    data: &'a [u8],
+
+    no_print: bool,
 }
 
 impl<'a> Bytes<'a>{
@@ -41,7 +43,9 @@ impl<'a> Bytes<'a>{
         Self { 
             idx_first: 0, 
             idx_last: slice.len(), 
-            data: slice 
+            data: slice,
+
+            no_print: false,
         }
     }
 
@@ -73,6 +77,10 @@ impl<'a> Bytes<'a>{
     pub fn reset(&mut self) {
         self.idx_first = 0;
         self.idx_last = self.data.len();
+    }
+
+    pub fn no_print(&mut self) {
+        self.no_print = true;
     }
 }
 
@@ -147,16 +155,22 @@ impl Default for &Bytes<'_> {
         &Bytes {
             idx_first: 0,
             idx_last: 0,
-            data: &DEFAULT_BYTES_SLICE
+            data: &DEFAULT_BYTES_SLICE,
+
+            no_print: false,
         }
     }
 }
 
 impl<'a> Debug for Bytes<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("Bytes")
-            .field(&&self[..])
-            .finish()
+        match self.no_print {
+            true => f.write_str("UNPRINTED BYTES OBJECT"),
+            false => f.debug_tuple("Bytes")
+                .field(&format_args!("Payload Length: {}", self.data.len()))
+                .field(&&self[..])
+                .finish()
+        }
     }
 }
 
@@ -183,12 +197,31 @@ pub struct Ipv4addr(pub u32);
 
 impl Debug for Ipv4addr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let f1 = (self.0 & 0xff000000) >> 24;
-        let f2 = (self.0 & 0x00ff0000) >> 16;
-        let f3 = (self.0 & 0x0000ff00) >> 8;
-        let f4 =  self.0 & 0x000000ff;
+        let f1 = (self.0 >> 24) & 0xff;
+        let f2 = (self.0 >> 16) & 0xff;
+        let f3 = (self.0 >>  8) & 0xff;
+        let f4 =  self.0 & 0xff;
 
         f.write_fmt(format_args!("{f1}.{f2}.{f3}.{f4} Ipv4"))
+    }
+}
+
+
+#[derive(Default)]
+pub struct Ipv6addr(pub u128);
+
+impl Debug for Ipv6addr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let f1 = (self.0 >> 112) & 0xffff;
+        let f2 = (self.0 >>  96) & 0xffff;
+        let f3 = (self.0 >>  80) & 0xffff;
+        let f4 = (self.0 >>  64) & 0xffff;
+        let f5 = (self.0 >>  48) & 0xffff;
+        let f6 = (self.0 >>  32) & 0xffff;
+        let f7 = (self.0 >>  16) & 0xffff;
+        let f8 = self.0 & 0xffff;
+
+        f.write_fmt(format_args!("{f1:04x}:{f2:04x}:{f3:04x}:{f4:04x}:{f5:04x}:{f6:04x}:{f7:04x}:{f8:04x}"))
     }
 }
 
