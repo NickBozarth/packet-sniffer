@@ -6,3 +6,6 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.98"
 byte-slice = { path = "../byte-slice", version = "*" }
+strum = "0.27.1"
+strum_macros = "0.27.1"
+crossterm = "0.29.0"

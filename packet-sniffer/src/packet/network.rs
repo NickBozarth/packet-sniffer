@@ -2,6 +2,8 @@ use byte_slice::{Bytes, Ipv4addr, Ipv6addr, MacAddress, SliceToUnsigned};
 use crate::packet::transport::*;
 use anyhow::Result;
 
+use super::{Layer, LayerTrait};
+
 #[derive(Debug, Default)]
 pub enum NetworkLayer<'a> {
     #[default]
@@ -34,6 +36,12 @@ impl<'a> NetworkLayer<'a> {
 }
 
 
+enum IpHeader<'a> {
+    Ipv4(Ipv4<'a>),
+    Ipv6(Ipv6<'a>)
+}
+
+
 
 
 
@@ -55,7 +63,7 @@ pub struct Ipv4<'a> {
     pub address_dst: Ipv4addr,
     // pub options: Option<Vec<>>
 
-    pub transport_layer: TransportLayer<'a>
+    pub next_layer: Box<Layer<'a>>
 
 }
 
@@ -79,7 +87,9 @@ impl<'a> Ipv4<'a> {
         println!("TODO IMPLEMENT OPTIONS");
 
         bytes.shift_first(20)?;
-        let transport_layer = TransportLayer::from_data(protocol, bytes)?;
+        let next_layer = Box::new(
+            Layer::TransportLayer(TransportLayer::from_data(protocol, bytes)?)
+        );
 
         Ok(
             Self {
@@ -95,9 +105,15 @@ impl<'a> Ipv4<'a> {
                 header_checksum,
                 address_src,
                 address_dst,
-                transport_layer,
+                next_layer,
             }
         )
+    }
+}
+
+impl<'a> LayerTrait for Ipv4<'a> {
+    fn next_layer(&self) -> &Layer {
+        &self.next_layer
     }
 }
 
@@ -116,7 +132,7 @@ pub struct Ipv6<'a> {
     pub address_src: Ipv6addr,
     pub address_dst: Ipv6addr,
 
-    pub transport_layer: TransportLayer<'a>
+    pub next_layer: Box<Layer<'a>>
 }
 
 impl<'a> Ipv6<'a> {
@@ -134,9 +150,9 @@ impl<'a> Ipv6<'a> {
         bytes.shift_first(40)?;
 
 
-
-
-        let transport_layer = TransportLayer::from_data(next_header, bytes)?;
+        let next_layer = Box::new(
+            Layer::TransportLayer(TransportLayer::from_data(next_header, bytes)?)
+        );
 
         Ok(
             Self {
@@ -148,7 +164,7 @@ impl<'a> Ipv6<'a> {
                 hop_limit,
                 address_src,
                 address_dst,
-                transport_layer,
+                next_layer,
 
                 ..Default::default()
             }

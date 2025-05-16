@@ -4,6 +4,8 @@ use byte_slice::{Bytes, MacAddress, SliceToUnsigned};
 use crate::packet::network::NetworkLayer;
 use anyhow::Result;
 
+use super::{Layer, LayerTrait};
+
 
 #[derive(Debug, Default)]
 pub enum DataLinkLayer<'a> {
@@ -14,6 +16,18 @@ pub enum DataLinkLayer<'a> {
     ETHII(ETHII<'a>),
     PPP,
     HDLC,
+}
+
+impl<'a> DataLinkLayer<'a> {
+    pub fn get_class_name(&self) -> &str {
+        match self {
+            DataLinkLayer::NULL => "NULL",
+            DataLinkLayer::UndefinedData(_) => "UndefinedData",
+            DataLinkLayer::ETHII(_) => "ETHII",
+            DataLinkLayer::PPP => "PPP",
+            DataLinkLayer::HDLC => "HDLC",
+        }
+    }
 }
 
 
@@ -76,20 +90,28 @@ impl MacHeader {
 #[derive(Debug, Default)]
 pub struct ETHII<'a> {
     pub mac_header: MacHeader,
-    pub network_layer: NetworkLayer<'a>,
+    pub next_layer: Box<Layer<'a>>,
 }
 
 impl<'a> ETHII<'a> {
     // TODO this does not need to be pub if DataLinkLayer has a from_bytes function
     pub fn from_bytes(bytes: &'a mut Bytes) -> Result<Self> {
         let mac_header = MacHeader::from_bytes(bytes)?;
-        let network_layer = NetworkLayer::from_data(mac_header.ethertype, bytes)?;
+        let next_layer = Box::new(
+            Layer::NetworkLayer(NetworkLayer::from_data(mac_header.ethertype, bytes)?)
+        );
 
         Ok(
             Self {
                 mac_header,
-                network_layer
+                next_layer
             }
         )
+    }
+}
+
+impl<'a> LayerTrait for ETHII<'a> {
+    fn next_layer(&self) -> &Layer {
+        &self.next_layer
     }
 }

@@ -236,7 +236,7 @@ pub enum MessageCode {
     // Reserved
 }
 
-macro_rules! code_0_undefined {
+macro_rules! code_0_defined {
     ($message_code_type:expr, $message_code:expr) => {
         match $message_code {
             0 => $message_code_type,
@@ -248,77 +248,81 @@ macro_rules! code_0_undefined {
 impl MessageCode {
     fn from_type_and_code(message_type: &MessageType, message_code: u8) -> Self {
         match message_type {
-            MessageType::EchoReply => code_0_undefined!(MessageCode::EchoReply, message_code),
-            MessageType::Unassigned => MessageCode::Reserved,
-            MessageType::SourceQuench => code_0_undefined!(MessageCode::SourceQuench, message_code),            MessageType::AlternateHostAddress => code_0_undefined!(MessageCode::AlternateHostAddress, message_code),
-            MessageType::EchoRequest => code_0_undefined!(MessageCode::EchoRequest, message_code),
-            MessageType::RouterAdvertisement => code_0_undefined!(MessageCode::RouterAdvertisement, message_code),
-            MessageType::RouterSolicitation => code_0_undefined!(MessageCode::RouterDiscovery, message_code),
-            MessageType::Timestamp => code_0_undefined!(MessageCode::Timestamp, message_code),
-            MessageType::TimestampReply => code_0_undefined!(MessageCode::TimestampReply, message_code),
-            MessageType::InformationRequest => code_0_undefined!(MessageCode::InformationRequest, message_code),
-            MessageType::InformationReply => code_0_undefined!(MessageCode::InformationReply, message_code),
-            MessageType::AddressMaskRequest => code_0_undefined!(MessageCode::AddressMaskRequest, message_code),
-            MessageType::AddressMaskReply => code_0_undefined!(MessageCode::AddressMaskReply, message_code),
-            MessageType::Traceroute => code_0_undefined!(MessageCode::InformationRequest, message_code),
-            MessageType::DatagramConversionError => code_0_undefined!(MessageCode::DatagramConversionError, message_code),
-            MessageType::MobileHostRedirect => code_0_undefined!(MessageCode::MobileHostRedirect, message_code),
-            MessageType::WhereAreYou => code_0_undefined!(MessageCode::WhereAreYou, message_code),
-            MessageType::HereIAm => code_0_undefined!(MessageCode::HereIAm, message_code),
-            MessageType::MobileRegistrationRequest => code_0_undefined!(MessageCode::MobileRegistrationRequest, message_code),
-            MessageType::MobileRegistrationReply => code_0_undefined!(MessageCode::MobileRegistrationReply, message_code),
-            MessageType::DomainNameRequest => code_0_undefined!(MessageCode::DomainNameRequest, message_code),
-            MessageType::DomainNameReply => code_0_undefined!(MessageCode::DomainNameReply, message_code),
-            MessageType::SkipAlgorithmDiscoveryProtocol => code_0_undefined!(MessageCode::SkipAlgorithmDiscoveryProtocol, message_code),
-            MessageType::Photuris => code_0_undefined!(MessageCode::Photuris, message_code),
-            MessageType::Experimental41 => code_0_undefined!(MessageCode::IcmpForExperimentalMobilityProtocols, message_code),
-            MessageType::Experimental253 => code_0_undefined!(MessageCode::Rfc362StyleExperiment1, message_code),
-            MessageType::Experimental254 => code_0_undefined!(MessageCode::Rfc362StyleExperiment2, message_code),
-            MessageType::ExtendedEchoRequest => code_0_undefined!(MessageCode::RequestExtenddedEcho, message_code),
+            MessageType::EchoReply =>                       code_0_defined!(MessageCode::EchoReply, message_code),
+            MessageType::Unassigned =>                      code_0_defined!(MessageCode::Reserved, message_code),
+            MessageType::SourceQuench =>                    code_0_defined!(MessageCode::SourceQuench, message_code),
+            MessageType::AlternateHostAddress =>            code_0_defined!(MessageCode::AlternateHostAddress, message_code),
+            MessageType::EchoRequest =>                     code_0_defined!(MessageCode::EchoRequest, message_code),
+            MessageType::RouterAdvertisement =>             code_0_defined!(MessageCode::RouterAdvertisement, message_code),
+            MessageType::RouterSolicitation =>              code_0_defined!(MessageCode::RouterDiscovery, message_code),
+            MessageType::Timestamp =>                       code_0_defined!(MessageCode::Timestamp, message_code),
+            MessageType::TimestampReply =>                  code_0_defined!(MessageCode::TimestampReply, message_code),
+            MessageType::InformationRequest =>              code_0_defined!(MessageCode::InformationRequest, message_code),
+            MessageType::InformationReply =>                code_0_defined!(MessageCode::InformationReply, message_code),
+            MessageType::AddressMaskRequest =>              code_0_defined!(MessageCode::AddressMaskRequest, message_code),
+            MessageType::AddressMaskReply =>                code_0_defined!(MessageCode::AddressMaskReply, message_code),
+            MessageType::Unassigned19 =>                    code_0_defined!(MessageCode::ReservedForSecurity, message_code),
+            MessageType::Unassigned20 =>                    code_0_defined!(MessageCode::ReservedForRobustnessExperiment, message_code),
+            MessageType::Traceroute =>                      code_0_defined!(MessageCode::InformationRequest, message_code),
+            MessageType::DatagramConversionError =>         code_0_defined!(MessageCode::DatagramConversionError, message_code),
+            MessageType::MobileHostRedirect =>              code_0_defined!(MessageCode::MobileHostRedirect, message_code),
+            MessageType::WhereAreYou =>                     code_0_defined!(MessageCode::WhereAreYou, message_code),
+            MessageType::HereIAm =>                         code_0_defined!(MessageCode::HereIAm, message_code),
+            MessageType::MobileRegistrationRequest =>       code_0_defined!(MessageCode::MobileRegistrationRequest, message_code),
+            MessageType::MobileRegistrationReply =>         code_0_defined!(MessageCode::MobileRegistrationReply, message_code),
+            MessageType::DomainNameRequest =>               code_0_defined!(MessageCode::DomainNameRequest, message_code),
+            MessageType::DomainNameReply =>                 code_0_defined!(MessageCode::DomainNameReply, message_code),
+            MessageType::SkipAlgorithmDiscoveryProtocol =>  code_0_defined!(MessageCode::SkipAlgorithmDiscoveryProtocol, message_code),
+            MessageType::Photuris =>                        code_0_defined!(MessageCode::Photuris, message_code),
+            MessageType::Experimental41 =>                  code_0_defined!(MessageCode::IcmpForExperimentalMobilityProtocols, message_code),
+            MessageType::Experimental253 =>                 code_0_defined!(MessageCode::Rfc362StyleExperiment1, message_code),
+            MessageType::Experimental254 =>                 code_0_defined!(MessageCode::Rfc362StyleExperiment2, message_code),
+            MessageType::ExtendedEchoRequest =>             code_0_defined!(MessageCode::RequestExtenddedEcho, message_code),
 
             MessageType::DesinationUnreachable => match message_code {
-                0 =>  MessageCode::DestinationNetworkUnreachable,
-                1 =>  MessageCode::DestinationHostUnreachable,
-                2 =>  MessageCode::DestinationProtocolUnreachable,
-                3 =>  MessageCode::DestinationPortUnreachable,
-                4 =>  MessageCode::FragmentationIsNeededAndTheDfFlagSet,
-                5 =>  MessageCode::SourceRouteFailed,
-                6 =>  MessageCode::DestinationNetworkUnknown,
-                7 =>  MessageCode::DestinationHostUnknown,
-                8 =>  MessageCode::SourceHostIsolated,
-                9 =>  MessageCode::NetworkAdministrativelyProhibited,
-                10 => MessageCode::HostAdministrativelyProhibited,
-                11 => MessageCode::NetworkUnreachableForTos,
-                12 => MessageCode::HostUnreachableForTos,
-                13 => MessageCode::CommunicationAdministrativelyProhibited,
-                14 => MessageCode::HostPrecedenceViolation,
-                15 => MessageCode::PrecedenceCutoffInEffect,
-                _ =>  MessageCode::UndefinedCode
+                        0 =>  MessageCode::DestinationNetworkUnreachable,
+                        1 =>  MessageCode::DestinationHostUnreachable,
+                        2 =>  MessageCode::DestinationProtocolUnreachable,
+                        3 =>  MessageCode::DestinationPortUnreachable,
+                        4 =>  MessageCode::FragmentationIsNeededAndTheDfFlagSet,
+                        5 =>  MessageCode::SourceRouteFailed,
+                        6 =>  MessageCode::DestinationNetworkUnknown,
+                        7 =>  MessageCode::DestinationHostUnknown,
+                        8 =>  MessageCode::SourceHostIsolated,
+                        9 =>  MessageCode::NetworkAdministrativelyProhibited,
+                        10 => MessageCode::HostAdministrativelyProhibited,
+                        11 => MessageCode::NetworkUnreachableForTos,
+                        12 => MessageCode::HostUnreachableForTos,
+                        13 => MessageCode::CommunicationAdministrativelyProhibited,
+                        14 => MessageCode::HostPrecedenceViolation,
+                        15 => MessageCode::PrecedenceCutoffInEffect,
+                        _ =>  MessageCode::UndefinedCode
             },
-
             MessageType::Redirect => match message_code {
-                0 => MessageCode::RedirectTheDatagramForTheNetwork,
-                1 => MessageCode::RedirectTheDatagramForTheHost,
-                2 => MessageCode::RedirectTheDatagramForTheServiceAndNetwork,
-                3 => MessageCode::RedirectTheDatagramForTheServiceAndHost,
-                _ => MessageCode::UndefinedCode
+                        0 => MessageCode::RedirectTheDatagramForTheNetwork,
+                        1 => MessageCode::RedirectTheDatagramForTheHost,
+                        2 => MessageCode::RedirectTheDatagramForTheServiceAndNetwork,
+                        3 => MessageCode::RedirectTheDatagramForTheServiceAndHost,
+                        _ => MessageCode::UndefinedCode
             },
-
             MessageType::TimeExceeded => match message_code {
-                0 => MessageCode::TimeToLiveExpiredInTransit,
-                1 => MessageCode::FragmentReassemblyTimeExceeded,
-                _ => MessageCode::UndefinedCode
+                        0 => MessageCode::TimeToLiveExpiredInTransit,
+                        1 => MessageCode::FragmentReassemblyTimeExceeded,
+                        _ => MessageCode::UndefinedCode
             }
-
             MessageType::ParameterProblem => match message_code {
-                0 => MessageCode::PointerIndicatesTheError,
-                1 => MessageCode::MissingARequiredOption,
-                2 => MessageCode::BadLength,
-                _ => MessageCode::UndefinedCode
+                        0 => MessageCode::PointerIndicatesTheError,
+                        1 => MessageCode::MissingARequiredOption,
+                        2 => MessageCode::BadLength,
+                        _ => MessageCode::UndefinedCode
             },
-
             MessageType::ExtendedEchoReply => match message_code {
-                0 =>  MessageCode::
+                        0 =>  MessageCode::NoError,
+                        1 =>  MessageCode::MalformedQuery,
+                        2 =>  MessageCode::NoSuchInterface,
+                        3 =>  MessageCode::NoSuchEntry,
+                        4 =>  MessageCode::MultipleInterfacesSatisfyQuery,
+                        _ =>  MessageCode::UndefinedCode
             }
         }
     }

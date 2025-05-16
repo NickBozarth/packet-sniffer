@@ -238,6 +238,27 @@ impl From<u64> for MacAddress {
     }
 }
 
+impl From<&str> for MacAddress {
+    fn from(value: &str) -> Self {
+        let octets: Vec<u8> = value.split(":")
+            .map(|octet_str| u8::from_str_radix(octet_str, 16).unwrap())
+            .collect();
+        assert!(octets.len() == 6, "Failed to parse &str to MacAddress");
+
+        let ret1 = 
+            ((octets[0] as u16) << 8) | 
+              octets[1] as u16;
+
+        let ret2 = 
+            ((octets[2] as u32) << 24) |
+            ((octets[3] as u32) << 16) |
+            ((octets[4] as u32) <<  8) |
+              octets[5] as u32;
+
+        Self(ret1, ret2)
+    }
+}
+
 impl Debug for MacAddress {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let f1 = self.0 >> 8;
